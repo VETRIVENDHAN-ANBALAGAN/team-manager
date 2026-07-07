@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* Light mode standard Tailwind slate and blue colors */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --slate-950: #020817;
+
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+  --blue-950: #172554;
+}
+
+.dark {
+  /* Elegant Dark specific design theme variables */
+  --slate-50: #0A0A0B;      /* Stratum AI Main BG */
+  --slate-100: #1C1C1E;     /* Active highlight bg */
+  --slate-200: #262626;     /* Stratum AI subtle border */
+  --slate-300: #E0E0E0;     /* Primary text color */
+  --slate-400: #A0A0A5;     /* Gray-400 secondary text */
+  --slate-500: #707075;     /* Gray-500 tertiary text */
+  --slate-600: #303032;     /* Active card border */
+  --slate-700: #262626;     /* Standard borders */
+  --slate-800: #262626;     /* Sidebar & major borders */
+  --slate-900: #111112;     /* Card background / Sidebar background */
+  --slate-950: #0A0A0B;     /* Stratum AI Main BG */
+
+  /* Override blue accent to elegant Indigo */
+  --blue-50: #1C1C1E;       /* Helper bg */
+  --blue-100: #262626;      /* Active items border */
+  --blue-200: #303032;      /* Highlight background */
+  --blue-300: #818CF8;      /* Indigo-400 for text hover */
+  --blue-400: #818CF8;      /* Indigo-400 primary accent hover */
+  --blue-500: #6366F1;      /* Indigo-500 core accent */
+  --blue-600: #4F46E5;      /* Indigo-600 strong accent */
+  --blue-700: #4338CA;      /* Indigo-700 hover state */
+  --blue-800: #3730A3;      /* Indigo-800 button active */
+  --blue-900: #1C1C1E;      /* Secondary active bg */
+  --blue-950: #111112;      /* Dark card bg */
+}
+
+@theme {
+  --font-sans: "Inter", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Map the Tailwind color names to the responsive CSS custom properties */
+  --color-slate-50: var(--slate-50);
+  --color-slate-100: var(--slate-100);
+  --color-slate-200: var(--slate-200);
+  --color-slate-300: var(--slate-300);
+  --color-slate-400: var(--slate-400);
+  --color-slate-500: var(--slate-500);
+  --color-slate-600: var(--slate-600);
+  --color-slate-700: var(--slate-700);
+  --color-slate-800: var(--slate-800);
+  --color-slate-900: var(--slate-900);
+  --color-slate-950: var(--slate-950);
+
+  --color-blue-50: var(--blue-50);
+  --color-blue-100: var(--blue-100);
+  --color-blue-200: var(--blue-200);
+  --color-blue-300: var(--blue-300);
+  --color-blue-400: var(--blue-400);
+  --color-blue-500: var(--blue-500);
+  --color-blue-600: var(--blue-600);
+  --color-blue-700: var(--blue-700);
+  --color-blue-800: var(--blue-800);
+  --color-blue-900: var(--blue-900);
+  --color-blue-950: var(--blue-950);
+}
+
+/* Custom scrollbar hides */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom Keyframe Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}

@@ -1,0 +1,6 @@
+{
+  "name": "IMS Pro",
+  "description": "An enterprise-tier inventory, asset, and team management platform featuring real-time overview metrics, bento layouts, live activity tracking, attendance logs, and interactive performance charts with comprehensive offline support and default dark mode.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

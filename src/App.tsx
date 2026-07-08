@@ -918,6 +918,7 @@ export default function App() {
             onClockAction={handleClockAction}
             searchQuery={searchQuery}
             currentUser={currentUser}
+            projects={projects}
           />
         );
       case 'files':

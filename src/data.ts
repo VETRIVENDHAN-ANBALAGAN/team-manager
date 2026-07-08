@@ -178,6 +178,7 @@ export const INITIAL_TEAM_MEMBERS: TeamMember[] = [
     name: 'Eleanor Vance',
     role: 'Administrator',
     status: 'online',
+    avatarUrl: '',
     initials: 'EV',
     clockInTime: '08:45 AM',
     totalHoursToday: '--',

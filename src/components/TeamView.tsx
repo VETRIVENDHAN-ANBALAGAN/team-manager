@@ -15,8 +15,9 @@ import {
   Plus,
   X
 } from 'lucide-react';
-import { TeamMember, FeedEvent, AttendanceLog, User } from '../types';
+import { TeamMember, FeedEvent, AttendanceLog, User, Project } from '../types';
 import { CLANS } from '../data';
+import TeamPulse from './TeamPulse';
 
 interface TeamViewProps {
   teamMembers: TeamMember[];
@@ -26,6 +27,7 @@ interface TeamViewProps {
   onClockAction: (memberId: string, action: 'clock_in' | 'clock_out' | 'away' | 'on_leave') => void;
   searchQuery: string;
   currentUser: User | null;
+  projects: Project[];
 }
 
 export default function TeamView({
@@ -35,8 +37,10 @@ export default function TeamView({
   onAddTeamMember,
   onClockAction,
   searchQuery,
-  currentUser
+  currentUser,
+  projects
 }: TeamViewProps) {
+  const [activeView, setActiveView] = useState<'pulse' | 'roster'>('pulse');
   const [memberSearch, setMemberSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<'all' | 'online' | 'away' | 'on-leave'>('all');
@@ -165,7 +169,35 @@ export default function TeamView({
         </div>
       </section>
 
-      {/* METRICS ROW */}
+      {/* View Switcher Tabs */}
+      <div className="flex items-center justify-between gap-4 bg-slate-100 dark:bg-slate-900/60 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-850 max-w-sm">
+        <button
+          onClick={() => setActiveView('pulse')}
+          className={`flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeView === 'pulse'
+              ? 'bg-white dark:bg-slate-950 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/30 dark:border-slate-800/30'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          Team Pulse Tracker
+        </button>
+        <button
+          onClick={() => setActiveView('roster')}
+          className={`flex-1 text-center py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeView === 'roster'
+              ? 'bg-white dark:bg-slate-950 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/30 dark:border-slate-800/30'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+        >
+          Roster & Shift Logs
+        </button>
+      </div>
+
+      {activeView === 'pulse' ? (
+        <TeamPulse currentUser={currentUser} projects={projects} />
+      ) : (
+        <>
+          {/* METRICS ROW */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Metric 1 */}
         <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col justify-center">
@@ -494,6 +526,8 @@ export default function TeamView({
           </table>
         </div>
       </section>
+        </>
+      )}
 
       {/* ADD MEMBER DIALOG OVERLAY */}
       {showAddModal && (

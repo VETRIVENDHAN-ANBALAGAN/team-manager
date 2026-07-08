@@ -52,7 +52,7 @@ export default function Sidebar({
   const filteredMenuItems = menuItems.filter(item => {
     const role = currentUser?.role;
     if (role === 'Team Member') {
-      return ['dashboard', 'projects', 'files', 'settings'].includes(item.id);
+      return ['dashboard', 'projects', 'team', 'files', 'settings'].includes(item.id);
     }
     if (role === 'Clan Leader') {
       return ['dashboard', 'projects', 'team', 'files', 'reports', 'settings'].includes(item.id);

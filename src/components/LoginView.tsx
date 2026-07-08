@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Building, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
-import { GEOMETRIC_LOGO } from '../data';
+import { Mail, Lock, Building, ArrowRight, ShieldCheck, AlertCircle, User as UserIcon } from 'lucide-react';
+import { GEOMETRIC_LOGO, CLANS } from '../data';
+import { User, UserRole } from '../types';
 
 interface LoginProps {
-  onLoginSuccess: (email: string) => void;
+  onLoginSuccess: (user: User, token: string) => void;
 }
 
 export default function LoginView({ onLoginSuccess }: LoginProps) {
+  const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<UserRole>('Team Member');
+  const [clanId, setClanId] = useState('vanguard');
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -25,21 +30,41 @@ export default function LoginView({ onLoginSuccess }: LoginProps) {
       setError('Password must be at least 4 characters long.');
       return;
     }
+    if (isRegister && !name.trim()) {
+      setError('Please enter your full name.');
+      return;
+    }
 
     setIsLoading(true);
-    // Simulate API authorization delay
-    setTimeout(() => {
-      setIsLoading(false);
-      onLoginSuccess(email);
-    }, 750);
-  };
 
-  const handleSSOLogin = (provider: string) => {
-    setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+      const body = isRegister 
+        ? { email, password, name: name.trim(), role, clanId: role === 'Admin' ? undefined : clanId }
+        : { email, password };
+
+      const API_BASE = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(API_BASE + endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Authentication failed');
+      }
+
+      // Success
+      localStorage.setItem('ims_jwt_token', data.token);
+      localStorage.setItem('ims_current_user', JSON.stringify(data.user));
+      onLoginSuccess(data.user, data.token);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during authentication.');
+    } finally {
       setIsLoading(false);
-      onLoginSuccess(provider === 'Google' ? 'vetrimgk@gmail.com' : 'sso.admin@company.com');
-    }, 500);
+    }
   };
 
   return (
@@ -62,8 +87,12 @@ export default function LoginView({ onLoginSuccess }: LoginProps) {
                 className="w-12 h-12 object-contain rounded-lg transition-transform duration-300 group-hover:scale-105"
               />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white mb-1.5 font-sans">Sign In</h1>
-            <p className="text-sm text-slate-400">Enter your details to access your dashboard.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-white mb-1.5 font-sans">
+              {isRegister ? 'Create Account' : 'Sign In'}
+            </h1>
+            <p className="text-sm text-slate-400">
+              {isRegister ? 'Register your enterprise profile.' : 'Enter your details to access your dashboard.'}
+            </p>
           </div>
 
           {/* Validation Alert */}
@@ -74,8 +103,31 @@ export default function LoginView({ onLoginSuccess }: LoginProps) {
             </div>
           )}
 
-          {/* Login Form */}
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            
+            {isRegister && (
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400" htmlFor="name">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                    <UserIcon className="w-4 h-4" />
+                  </div>
+                  <input
+                    id="name"
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="John Doe"
+                    className="w-full pl-10 pr-4 py-2.5 border border-slate-800 rounded-xl text-sm bg-slate-900/50 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all duration-150 h-[42px]"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Email Field */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400" htmlFor="email">
@@ -103,13 +155,15 @@ export default function LoginView({ onLoginSuccess }: LoginProps) {
                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400" htmlFor="password">
                   Password
                 </label>
-                <button
-                  type="button"
-                  onClick={() => alert("Mock password recovery: In a production setup, this sends a secure reset token to your registered email.")}
-                  className="text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  Forgot Password?
-                </button>
+                {!isRegister && (
+                  <button
+                    type="button"
+                    onClick={() => alert("Credentials recovery: Please contact system administrator to reset database values.")}
+                    className="text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    Forgot Password?
+                  </button>
+                )}
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
@@ -127,19 +181,63 @@ export default function LoginView({ onLoginSuccess }: LoginProps) {
               </div>
             </div>
 
-            {/* Remember Me Toggle */}
-            <div className="flex items-center pt-1.5 pb-2">
-              <input
-                id="remember-me"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4.5 w-4.5 rounded border-slate-800 bg-slate-900 text-blue-600 focus:ring-blue-500/20 focus:ring-offset-slate-950"
-              />
-              <label htmlFor="remember-me" className="ml-2.5 text-sm text-slate-400 select-none">
-                Keep me signed in
-              </label>
-            </div>
+            {isRegister && (
+              <>
+                {/* Role selection dropdown */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400" htmlFor="role">
+                    Access Role
+                  </label>
+                  <select
+                    id="role"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as UserRole)}
+                    className="w-full px-3.5 py-2 border border-slate-800 rounded-xl text-sm bg-slate-900/50 text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all duration-150 h-[42px]"
+                  >
+                    <option value="Team Member">Team Member (Clan isolation limits)</option>
+                    <option value="Clan Leader">Clan Leader (Clan control)</option>
+                    <option value="Admin">Systems Administrator (Full system clearance)</option>
+                  </select>
+                </div>
+
+                {/* Clan Selection (Only if not Admin) */}
+                {role !== 'Admin' && (
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400" htmlFor="clanId">
+                      Assigned Clan
+                    </label>
+                    <select
+                      id="clanId"
+                      value={clanId}
+                      onChange={(e) => setClanId(e.target.value)}
+                      className="w-full px-3.5 py-2 border border-slate-800 rounded-xl text-sm bg-slate-900/50 text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 transition-all duration-150 h-[42px]"
+                    >
+                      {CLANS.map(clan => (
+                        <option key={clan.id} value={clan.id}>
+                          {clan.name} ({clan.description})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </>
+            )}
+
+            {!isRegister && (
+              /* Remember Me Toggle */
+              <div className="flex items-center pt-1.5 pb-2">
+                <input
+                  id="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4.5 w-4.5 rounded border-slate-800 bg-slate-900 text-blue-600 focus:ring-blue-500/20 focus:ring-offset-slate-950"
+                />
+                <label htmlFor="remember-me" className="ml-2.5 text-sm text-slate-400 select-none">
+                  Keep me signed in
+                </label>
+              </div>
+            )}
 
             {/* Submit Button */}
             <button
@@ -151,64 +249,24 @@ export default function LoginView({ onLoginSuccess }: LoginProps) {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               ) : (
                 <>
-                  Sign In <ArrowRight className="w-4 h-4" />
+                  {isRegister ? 'Sign Up' : 'Sign In'} <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          {/* Or continue with Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-800/80"></div>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase tracking-wider">
-              <span className="px-3 bg-slate-950 text-slate-500 font-medium">Or continue with</span>
-            </div>
-          </div>
-
-          {/* SSO Actions */}
-          <div className="space-y-2.5">
+          {/* Toggle Register / Login link */}
+          <div className="mt-4 text-center">
             <button
               type="button"
-              onClick={() => handleSSOLogin('Google')}
-              disabled={isLoading}
-              className="w-full bg-slate-900/80 border border-slate-800 hover:border-slate-700 hover:bg-slate-900 text-slate-200 font-semibold text-sm rounded-xl h-[42px] flex items-center justify-center gap-3 transition-colors duration-150 cursor-pointer"
+              onClick={() => {
+                setIsRegister(!isRegister);
+                setError('');
+              }}
+              className="text-xs text-blue-400 hover:text-blue-300 font-semibold transition-colors"
             >
-              {/* Google SVG Logo */}
-              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
-              </svg>
-              Single Sign-On (Google)
+              {isRegister ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
             </button>
-
-            <button
-              type="button"
-              onClick={() => handleSSOLogin('SAML')}
-              disabled={isLoading}
-              className="w-full bg-slate-900/80 border border-slate-800 hover:border-slate-700 hover:bg-slate-900 text-slate-200 font-semibold text-sm rounded-xl h-[42px] flex items-center justify-center gap-3 transition-colors duration-150 cursor-pointer"
-            >
-              <Building className="w-4.5 h-4.5 text-slate-400" />
-              Enterprise SSO (SAML)
-            </button>
-          </div>
-
-          {/* Footer Footnote Terms */}
-          <div className="mt-6 text-center">
-            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-              By signing in, you agree to our{' '}
-              <a href="#" className="text-slate-400 hover:text-slate-300 underline underline-offset-2 hover:underline">
-                Terms of Service
-              </a>{' '}
-              and{' '}
-              <a href="#" className="text-slate-400 hover:text-slate-300 underline underline-offset-2 hover:underline">
-                Privacy Policy
-              </a>
-              .
-            </p>
           </div>
 
         </div>

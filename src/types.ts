@@ -114,3 +114,18 @@ export interface Client {
   notes?: string;
 }
 
+export interface SessionLog {
+  startTime: Date;
+  endTime?: Date;
+}
+
+export interface Attendance {
+  userId: any;
+  status: 'Available' | 'Deep Work' | 'Away' | 'Offline';
+  activeProjectId?: any;
+  logDate?: Date;
+  sessionLogs: SessionLog[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+

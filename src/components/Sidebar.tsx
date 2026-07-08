@@ -49,6 +49,17 @@ export default function Sidebar({
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
+  const filteredMenuItems = menuItems.filter(item => {
+    const role = currentUser?.role;
+    if (role === 'Team Member') {
+      return ['dashboard', 'projects', 'files', 'settings'].includes(item.id);
+    }
+    if (role === 'Clan Leader') {
+      return ['dashboard', 'projects', 'team', 'files', 'reports', 'settings'].includes(item.id);
+    }
+    return true; // Admin has full access
+  });
+
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
     setIsMobileOpen(false);
@@ -115,28 +126,6 @@ export default function Sidebar({
               Global Overview Access
             </div>
           )}
-
-          {/* Dynamic Role Switcher Tool for Testing */}
-          <div className="mt-3 pt-2.5 border-t border-slate-800/50">
-            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-              <UserCheck className="w-3 h-3 text-slate-400" /> Quick Role Simulator
-            </p>
-            <div className="grid grid-cols-3 gap-1">
-              {(['Admin', 'Clan Leader', 'Team Member'] as UserRole[]).map((r) => (
-                <button
-                  key={r}
-                  onClick={() => onSwitchRole(r)}
-                  className={`text-[9px] py-1 px-1 rounded font-bold transition-all ${
-                    currentUser.role === r
-                      ? 'bg-blue-600 text-white shadow'
-                      : 'bg-slate-950 text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
-                  }`}
-                >
-                  {r.split(' ')[0]}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       )}
 
@@ -150,7 +139,7 @@ export default function Sidebar({
 
       {/* Navigation List */}
       <ul className="flex flex-col gap-1 flex-grow overflow-y-auto pr-1">
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           const IconComponent = item.icon;
           const isActive = activeTab === item.id;
           return (

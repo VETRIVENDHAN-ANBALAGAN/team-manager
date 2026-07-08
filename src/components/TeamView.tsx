@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   Download, 
@@ -15,7 +15,7 @@ import {
   Plus,
   X
 } from 'lucide-react';
-import { TeamMember, FeedEvent, AttendanceLog } from '../types';
+import { TeamMember, FeedEvent, AttendanceLog, User } from '../types';
 import { CLANS } from '../data';
 
 interface TeamViewProps {
@@ -25,6 +25,7 @@ interface TeamViewProps {
   onAddTeamMember: (member: Omit<TeamMember, 'id'>) => void;
   onClockAction: (memberId: string, action: 'clock_in' | 'clock_out') => void;
   searchQuery: string;
+  currentUser: User | null;
 }
 
 export default function TeamView({
@@ -33,7 +34,8 @@ export default function TeamView({
   attendanceLogs,
   onAddTeamMember,
   onClockAction,
-  searchQuery
+  searchQuery,
+  currentUser
 }: TeamViewProps) {
   const [memberSearch, setMemberSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -45,6 +47,13 @@ export default function TeamView({
   const [newMemberStatus, setNewMemberStatus] = useState<'online' | 'away' | 'on-leave'>('online');
   const [newMemberAvatar, setNewMemberAvatar] = useState('');
   const [newMemberClanId, setNewMemberClanId] = useState('vanguard');
+
+  // Set default clan for Clan Leader on init
+  useEffect(() => {
+    if (currentUser && currentUser.role === 'Clan Leader' && currentUser.clanId) {
+      setNewMemberClanId(currentUser.clanId);
+    }
+  }, [currentUser]);
 
   // Local stats calculations
   const totalCount = teamMembers.length;
@@ -145,12 +154,14 @@ export default function TeamView({
           >
             <Download className="w-4 h-4" /> Export CSV Logs
           </button>
-          <button 
-            onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-950/20 active:scale-95 text-white font-semibold text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
-          >
-            <UserPlus className="w-4 h-4" /> Add Team Member
-          </button>
+          {currentUser?.role !== 'Team Member' && (
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="bg-blue-600 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-950/20 active:scale-95 text-white font-semibold text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+            >
+              <UserPlus className="w-4 h-4" /> Add Team Member
+            </button>
+          )}
         </div>
       </section>
 
@@ -277,27 +288,41 @@ export default function TeamView({
                     
                     {/* Active Controls */}
                     <div className="flex items-center justify-between gap-2.5">
-                      {member.status !== 'on-leave' ? (
-                        <div className="flex items-center gap-1.5">
-                          {member.status === 'online' ? (
-                            <button
-                              onClick={() => onClockAction(member.id, 'clock_out')}
-                              className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-500/5 dark:bg-red-950/20 px-2 py-1 rounded border border-red-500/10 hover:bg-red-500/10 transition-colors cursor-pointer flex items-center gap-1"
-                            >
-                              <LogOut className="w-3 h-3" /> Clock Out
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => onClockAction(member.id, 'clock_in')}
-                              className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 dark:bg-emerald-950/20 px-2 py-1 rounded border border-emerald-500/10 hover:bg-emerald-500/10 transition-colors cursor-pointer flex items-center gap-1"
-                            >
-                              <LogIn className="w-3 h-3" /> Clock In
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-[10px] font-semibold text-slate-400 italic">No Clock Active</span>
-                      )}
+                      {(() => {
+                        const isSelf = currentUser && member.name.toLowerCase() === currentUser.name.split(' (')[0].toLowerCase();
+                        if (member.status === 'on-leave') {
+                          return <span className="text-[10px] font-semibold text-slate-400 italic">On Leave</span>;
+                        }
+                        if (isSelf) {
+                          return (
+                            <div className="flex items-center gap-1.5">
+                              {member.status === 'online' ? (
+                                <button
+                                  onClick={() => onClockAction(member.id, 'clock_out')}
+                                  className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-500/5 dark:bg-red-950/20 px-2 py-1 rounded border border-red-500/10 hover:bg-red-500/10 transition-colors cursor-pointer flex items-center gap-1"
+                                >
+                                  <LogOut className="w-3 h-3" /> Clock Out
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => onClockAction(member.id, 'clock_in')}
+                                  className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 dark:bg-emerald-950/20 px-2 py-1 rounded border border-emerald-500/10 hover:bg-emerald-500/10 transition-colors cursor-pointer flex items-center gap-1"
+                                >
+                                  <LogIn className="w-3 h-3" /> Clock In
+                                </button>
+                              )}
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <span className="text-[10px] font-semibold text-slate-400">
+                              {member.status === 'online' 
+                                ? `Clocked In: ${member.clockInTime || '09:00 AM'}` 
+                                : `Clocked Out: ${member.totalHoursToday && member.totalHoursToday !== '--' ? member.totalHoursToday : 'Inactive'}`}
+                            </span>
+                          );
+                        }
+                      })()}
                       
                       <button
                         onClick={() => alert(`Profile Details for ${member.name}:\nRole: ${member.role}\nStatus: ${member.status}\nLogged Clock State: ${member.clockInTime ? `Clocked in at ${member.clockInTime}` : 'Not currently clocked in.'}`)}
@@ -513,15 +538,21 @@ export default function TeamView({
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Assigned Clan Segment</label>
-                <select
-                  value={newMemberClanId}
-                  onChange={(e) => setNewMemberClanId(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none"
-                >
-                  {CLANS.map(clan => (
-                    <option key={clan.id} value={clan.id}>{clan.name}</option>
-                  ))}
-                </select>
+                {currentUser?.role === 'Clan Leader' ? (
+                  <div className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 text-slate-500 text-sm font-semibold">
+                    {CLANS.find(c => c.id === currentUser.clanId)?.name || 'Your Clan'} (Locked)
+                  </div>
+                ) : (
+                  <select
+                    value={newMemberClanId}
+                    onChange={(e) => setNewMemberClanId(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none"
+                  >
+                    {CLANS.map(clan => (
+                      <option key={clan.id} value={clan.id}>{clan.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="pt-2 flex justify-end gap-3">

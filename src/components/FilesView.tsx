@@ -14,20 +14,22 @@ import {
   Archive,
   Wrench
 } from 'lucide-react';
-import { IMSFile } from '../types';
+import { IMSFile, User } from '../types';
 
 interface FilesViewProps {
   files: IMSFile[];
   onAddFile: (file: Omit<IMSFile, 'id'>) => void;
   onDeleteFile: (id: string) => void;
   searchQuery: string;
+  currentUser: User | null;
 }
 
 export default function FilesView({
   files,
   onAddFile,
   onDeleteFile,
-  searchQuery
+  searchQuery,
+  currentUser
 }: FilesViewProps) {
   const [fileSearch, setFileSearch] = useState('');
   const [dragActive, setDragActive] = useState(false);
@@ -247,13 +249,15 @@ export default function FilesView({
                           >
                             <Download className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => onDeleteFile(file.id)}
-                            className="p-1 text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
-                            title="Delete Asset"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {currentUser?.role !== 'Team Member' && (
+                            <button
+                              onClick={() => onDeleteFile(file.id)}
+                              className="p-1 text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                              title="Delete Asset"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

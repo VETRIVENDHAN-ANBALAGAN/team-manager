@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { Project, Task, TeamMember, GrowthInsight, FeedEvent, User } from '../types';
 import { CLANS } from '../data';
+import TeamPulse from './TeamPulse';
 
 interface DashboardViewProps {
   currentUser: User | null;
@@ -59,7 +60,7 @@ export default function DashboardView({
   onUpdateFeed
 }: DashboardViewProps) {
   // Segmented control to toggle between both visual layouts
-  const [layoutMode, setLayoutMode] = useState<'inventory' | 'performance'>('inventory');
+  const [layoutMode, setLayoutMode] = useState<'inventory' | 'performance' | 'pulse'>('inventory');
 
   // Tab state for operations charts
   const [activeChartTab, setActiveChartTab] = useState<'attendance' | 'clan_workloads' | 'project_rings'>('attendance');
@@ -281,11 +282,21 @@ export default function DashboardView({
             >
               Team Performance
             </button>
+            <button
+              onClick={() => setLayoutMode('pulse')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                layoutMode === 'pulse'
+                  ? 'bg-white dark:bg-slate-950 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white'
+              }`}
+            >
+              Team Pulse
+            </button>
           </div>
 
           <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 px-3.5 py-1.5 rounded-full shadow-sm">
             <Calendar className="w-3.5 h-3.5 text-blue-500" />
-            <span>Oct 24, 2023</span>
+            <span>Oct 24</span>
           </div>
         </div>
       </div>
@@ -318,8 +329,12 @@ export default function DashboardView({
       )}
 
       {/* METRICS Bento Grid (Conditional Layout Mode rendering) */}
-      {layoutMode === 'inventory' ? (
-        /* VARIANT 1: Inventory & Accounts Grid */
+      {layoutMode === 'pulse' ? (
+        <TeamPulse currentUser={currentUser} projects={projects} />
+      ) : (
+        <>
+          {layoutMode === 'inventory' ? (
+            /* VARIANT 1: Inventory & Accounts Grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Card 1: Projects Breakdown */}
           <div className="bg-white dark:bg-slate-950 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-[155px]">
@@ -944,6 +959,8 @@ export default function DashboardView({
         </div>
 
       </div>
+    </>
+  )}
 
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Bell, History, Settings, CheckSquare, Sun, Moon, Menu } from 'lucide-react';
-import { ADMIN_USER } from '../data';
+import { User } from '../types';
 
 interface HeaderProps {
   activeTab: string;
@@ -10,6 +10,7 @@ interface HeaderProps {
   isDark: boolean;
   onMenuToggle: () => void;
   onSearchChange: (query: string) => void;
+  currentUser: User | null;
 }
 
 export default function Header({
@@ -19,7 +20,8 @@ export default function Header({
   onToggleTheme,
   isDark,
   onMenuToggle,
-  onSearchChange
+  onSearchChange,
+  currentUser
 }: HeaderProps) {
   const [searchVal, setSearchVal] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
@@ -169,15 +171,18 @@ export default function Header({
 
         {/* User Info & Avatar */}
         <div className="flex items-center gap-2.5 border-l border-slate-200 dark:border-slate-800 pl-3 md:pl-4 select-none shrink-0">
-          <img
-            src={ADMIN_USER.avatarUrl}
-            alt={ADMIN_USER.name}
-            title={`${ADMIN_USER.name} - ${ADMIN_USER.role}`}
-            className="w-8.5 h-8.5 rounded-full object-cover border border-slate-200 dark:border-slate-800 shadow-sm cursor-pointer hover:border-blue-500 transition-colors"
-          />
+          <div className={`w-8.5 h-8.5 rounded-lg flex items-center justify-center text-xs font-bold text-white uppercase shadow ${
+            currentUser?.role === 'Admin' 
+              ? 'bg-blue-600' 
+              : currentUser?.role === 'Clan Leader' 
+                ? 'bg-amber-600' 
+                : 'bg-emerald-600'
+          }`}>
+            {currentUser?.name ? currentUser.name.split(' ')[0][0] + (currentUser.name.split(' ')[1]?.[0] || '') : 'US'}
+          </div>
           <div className="hidden lg:block">
-            <p className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[100px]">{ADMIN_USER.name}</p>
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 truncate max-w-[100px] uppercase tracking-wider mt-0.5">Admin</p>
+            <p className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[100px]">{currentUser?.name || 'User'}</p>
+            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 truncate max-w-[100px] uppercase tracking-wider mt-0.5">{currentUser?.role || 'Guest'}</p>
           </div>
         </div>
 

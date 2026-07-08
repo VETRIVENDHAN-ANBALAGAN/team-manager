@@ -13,12 +13,15 @@ import {
   Info
 } from 'lucide-react';
 
+import { User } from '../types';
+
 interface SettingsViewProps {
   isDark: boolean;
   onToggleTheme: () => void;
   isOfflineSimulated: boolean;
   onToggleOfflineSimulation: () => void;
   onResetFactoryDefaults: () => void;
+  currentUser: User | null;
 }
 
 export default function SettingsView({
@@ -26,7 +29,8 @@ export default function SettingsView({
   onToggleTheme,
   isOfflineSimulated,
   onToggleOfflineSimulation,
-  onResetFactoryDefaults
+  onResetFactoryDefaults,
+  currentUser
 }: SettingsViewProps) {
 
   const handleResetClick = () => {
@@ -134,21 +138,23 @@ export default function SettingsView({
         <div className="space-y-6">
           
           {/* Factory Default controls */}
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-              <Database className="w-5 h-5 text-blue-500" /> Database Management
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Reset caches, clean files database structures, or restore pristine default datasets easily.
-            </p>
+          {currentUser?.role === 'Admin' && (
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <Database className="w-5 h-5 text-blue-500" /> Database Management
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Reset caches, clean files database structures, or restore pristine default datasets easily.
+              </p>
 
-            <button
-              onClick={handleResetClick}
-              className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-500 hover:shadow-lg hover:shadow-red-950/20 active:scale-98 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer shadow-md"
-            >
-              <RotateCcw className="w-4 h-4" /> Restore Default Mockups
-            </button>
-          </div>
+              <button
+                onClick={handleResetClick}
+                className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-500 hover:shadow-lg hover:shadow-red-950/20 active:scale-98 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer shadow-md"
+              >
+                <RotateCcw className="w-4 h-4" /> Restore Default Mockups
+              </button>
+            </div>
+          )}
 
           {/* Operational Rules */}
           <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-3">

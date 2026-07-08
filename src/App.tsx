@@ -704,12 +704,20 @@ export default function App() {
     syncLogs([newLog, ...attendanceLogs]);
   };
 
-  const handleClockAction = (memberId: string, action: 'clock_in' | 'clock_out') => {
+  const handleClockAction = (memberId: string, action: 'clock_in' | 'clock_out' | 'away' | 'on_leave') => {
     const updatedMembers = teamMembers.map(m => {
       if (m.id === memberId) {
+        let newStatus: 'online' | 'away' | 'on-leave' = 'online';
+        if (action === 'clock_in') {
+          newStatus = 'online';
+        } else if (action === 'away' || action === 'clock_out') {
+          newStatus = 'away';
+        } else if (action === 'on_leave') {
+          newStatus = 'on-leave';
+        }
         return {
           ...m,
-          status: action === 'clock_in' ? 'online' : ('away' as const),
+          status: newStatus,
           clockInTime: action === 'clock_in' ? '09:00 AM' : m.clockInTime,
           totalHoursToday: action === 'clock_out' ? '8.0h' : m.totalHoursToday
         };
@@ -721,21 +729,62 @@ export default function App() {
 
     const targetMember = teamMembers.find(m => m.id === memberId);
     if (targetMember) {
+      // Sync with Team Pulse API if it is the current logged-in user
+      if (currentUser) {
+        const cleanMemberName = targetMember.name.split(' (')[0].toLowerCase();
+        const cleanCurrentUserName = currentUser.name.split(' (')[0].toLowerCase();
+        if (cleanMemberName === cleanCurrentUserName) {
+          let pulseStatus: 'Available' | 'Away' | 'Offline' = 'Available';
+          if (action === 'clock_in') {
+            pulseStatus = 'Available';
+          } else if (action === 'away') {
+            pulseStatus = 'Away';
+          } else if (action === 'on_leave' || action === 'clock_out') {
+            pulseStatus = 'Offline';
+          }
+
+          const token = localStorage.getItem('ims_jwt_token');
+          const API_BASE = import.meta.env.VITE_API_URL || '';
+          fetch(API_BASE + '/api/attendance/pulse', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: pulseStatus })
+          }).catch(err => console.error('Error syncing clock to pulse:', err));
+        }
+      }
+
+      const getDetailText = () => {
+        if (action === 'clock_in') return 'Clocked in to shift';
+        if (action === 'away') return 'Marked shift status as Away';
+        if (action === 'on_leave') return 'Marked shift status as On Leave';
+        return 'Clocked out of shift';
+      };
+
+      const getInsightTitle = () => {
+        if (action === 'clock_in') return 'Clocked In';
+        if (action === 'away') return 'Status Away';
+        if (action === 'on_leave') return 'Status On Leave';
+        return 'Clocked Out';
+      };
+
       const newEvent: FeedEvent = {
         id: `feed_${Date.now()}`,
         memberId: targetMember.id,
         memberName: targetMember.name,
-        action: action,
-        detail: action === 'clock_in' ? 'Clocked in to shift' : 'Clocked out of shift',
+        action: action === 'clock_in' ? 'clock_in' : 'clock_out',
+        detail: getDetailText(),
         time: 'Just Now',
-        statusType: action === 'clock_in' ? 'success' : 'info'
+        statusType: action === 'clock_in' ? 'success' : action === 'away' ? 'warning' : 'info'
       };
       syncFeed([newEvent, ...feedEvents]);
 
       // Add analytical growth insight log
       const newInsight: GrowthInsight = {
         id: `ins_${Date.now()}`,
-        title: `${targetMember.name} ${action === 'clock_in' ? 'Clocked In' : 'Clocked Out'}`,
+        title: `${targetMember.name} ${getInsightTitle()}`,
         description: `${targetMember.name} updated clock parameters inside safe database ledger.`,
         type: 'Log Sync',
         credits: '+10 Cr',

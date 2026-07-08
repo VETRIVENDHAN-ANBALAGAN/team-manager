@@ -23,7 +23,7 @@ interface TeamViewProps {
   feedEvents: FeedEvent[];
   attendanceLogs: AttendanceLog[];
   onAddTeamMember: (member: Omit<TeamMember, 'id'>) => void;
-  onClockAction: (memberId: string, action: 'clock_in' | 'clock_out') => void;
+  onClockAction: (memberId: string, action: 'clock_in' | 'clock_out' | 'away' | 'on_leave') => void;
   searchQuery: string;
   currentUser: User | null;
 }
@@ -290,34 +290,57 @@ export default function TeamView({
                     <div className="flex items-center justify-between gap-2.5">
                       {(() => {
                         const isSelf = currentUser && member.name.toLowerCase() === currentUser.name.split(' (')[0].toLowerCase();
-                        if (member.status === 'on-leave') {
-                          return <span className="text-[10px] font-semibold text-slate-400 italic">On Leave</span>;
-                        }
                         if (isSelf) {
                           return (
                             <div className="flex items-center gap-1.5">
-                              {member.status === 'online' ? (
-                                <button
-                                  onClick={() => onClockAction(member.id, 'clock_out')}
-                                  className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-500/5 dark:bg-red-950/20 px-2 py-1 rounded border border-red-500/10 hover:bg-red-500/10 transition-colors cursor-pointer flex items-center gap-1"
-                                >
-                                  <LogOut className="w-3 h-3" /> Clock Out
-                                </button>
-                              ) : (
+                              {member.status !== 'online' && (
                                 <button
                                   onClick={() => onClockAction(member.id, 'clock_in')}
                                   className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 dark:bg-emerald-950/20 px-2 py-1 rounded border border-emerald-500/10 hover:bg-emerald-500/10 transition-colors cursor-pointer flex items-center gap-1"
+                                  title="Login / Clock In"
                                 >
-                                  <LogIn className="w-3 h-3" /> Clock In
+                                  <LogIn className="w-3 h-3" /> Login
+                                </button>
+                              )}
+                              {member.status !== 'away' && (
+                                <button
+                                  onClick={() => onClockAction(member.id, 'away')}
+                                  className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/5 dark:bg-amber-950/20 px-2 py-1 rounded border border-amber-500/10 hover:bg-amber-500/10 transition-colors cursor-pointer flex items-center gap-1"
+                                  title="Set status to Away"
+                                >
+                                  <Clock className="w-3 h-3" /> Away
+                                </button>
+                              )}
+                              {member.status !== 'on-leave' && (
+                                <button
+                                  onClick={() => onClockAction(member.id, 'on_leave')}
+                                  className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-500/5 dark:bg-slate-950/20 px-2 py-1 rounded border border-slate-500/10 hover:bg-slate-500/10 transition-colors cursor-pointer flex items-center gap-1"
+                                  title="Go on Leave"
+                                >
+                                  <LogOut className="w-3 h-3" /> Leave
+                                </button>
+                              )}
+                              {member.status === 'online' && (
+                                <button
+                                  onClick={() => onClockAction(member.id, 'clock_out')}
+                                  className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-500/5 dark:bg-red-950/20 px-2 py-1 rounded border border-red-500/10 hover:bg-red-500/10 transition-colors cursor-pointer flex items-center gap-1"
+                                  title="Clock Out / Logout"
+                                >
+                                  <LogOut className="w-3 h-3" /> Logout
                                 </button>
                               )}
                             </div>
                           );
                         } else {
+                          if (member.status === 'on-leave') {
+                            return <span className="text-[10px] font-semibold text-slate-400 italic">On Leave</span>;
+                          }
                           return (
                             <span className="text-[10px] font-semibold text-slate-400">
                               {member.status === 'online' 
                                 ? `Clocked In: ${member.clockInTime || '09:00 AM'}` 
+                                : member.status === 'away'
+                                ? `Away`
                                 : `Clocked Out: ${member.totalHoursToday && member.totalHoursToday !== '--' ? member.totalHoursToday : 'Inactive'}`}
                             </span>
                           );

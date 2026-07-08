@@ -172,6 +172,16 @@ export const INITIAL_TEAM_MEMBERS: TeamMember[] = [
     clockInTime: '08:50 AM',
     totalHoursToday: '8h 15m',
     clanId: 'sentinel'
+  },
+  {
+    id: 'mem-5',
+    name: 'Eleanor Vance',
+    role: 'Administrator',
+    status: 'online',
+    initials: 'EV',
+    clockInTime: '08:45 AM',
+    totalHoursToday: '--',
+    clanId: 'vanguard'
   }
 ];
 
